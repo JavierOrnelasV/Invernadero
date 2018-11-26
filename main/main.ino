@@ -37,6 +37,8 @@ Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 1234
 #define relePin      15
 #define led1Pin      0
 #define led2Pin      2
+#define soilPin      A0
+#define soilPower    16
 #define baudSpeed    115200
 OneWire ourWire(13);
 DallasTemperature temperature(&ourWire);
@@ -47,8 +49,6 @@ int tiempoRiego = 1; //En segundos
 unsigned long startMillis;
 unsigned long currentMillis;
 const unsigned long period = 30000;
-int soilPin = A0;
-int soilPower = 16;
 int j = 0;
 void MQTT_connect();
 
