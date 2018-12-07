@@ -29,8 +29,13 @@ Adafruit_MQTT_Client mqtt(&client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO
 Adafruit_MQTT_Publish bombaP = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/bomba");
 Adafruit_MQTT_Publish humedadP = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/humedad");
 Adafruit_MQTT_Publish luzP = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/luz");
+Adafruit_MQTT_Publish temperaturaP = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/temperatura");
+Adafruit_MQTT_Publish temperaturaPlus = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/temperaturaPlus");
+Adafruit_MQTT_Publish humedadPlus = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/humedadPlus");
+Adafruit_MQTT_Publish luzPlus = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/luzPlus");
 Adafruit_MQTT_Subscribe bomba = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/bomba");
 Adafruit_MQTT_Subscribe humedadS = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/humedad");
+Adafruit_MQTT_Subscribe assistant = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/assistant");
 
 //    Declaraciones
 Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 12345);
@@ -169,6 +174,29 @@ void humedadF(Adafruit_MQTT_Subscribe *subscription){
     if (agh < 20){
       encender();
     }
+  } 
+}
+
+void assistantF(Adafruit_MQTT_Subscribe *subscription){
+  if (subscription == &assistant) {
+    Serial.print(F("Asistente: "));
+    Serial.println((char *)assistant.lastread);
+    if (strcmp((char *)bomba.lastread, "true") == 0){
+      humedadPs(readSoil());
+      sensors_event_t event;
+      tsl.getEvent(&event);
+      if (event.light){
+        luzPs(event.light);
+        Serial.println(event.light);
+      }
+      else{
+        Serial.println("Sobrecarga de sensor de luz");
+      }
+      delay(250);
+      temperature.requestTemperatures();
+      float tempu = temperature.getTempCByIndex(0);
+      temperaturaPs(tempu);
+    }
   }
 }
 
@@ -227,7 +255,38 @@ void luz(int luz){
 void temperatura(int tempu){
   Serial.println(F("Enviando valor"));
   Serial.print("...");
-  if (!luzP.publish(tempu)) {
+  if (!temperaturaP.publish(tempu)) {
+    Serial.println(F("Fallo"));
+  } else {
+    Serial.println(F("Enviado!"));
+  }
+}
+
+void humedadPs(int soil){
+  Serial.println(F("Enviando valor"));
+  Serial.print("...");
+  if (!humedadPlus.publish(soil)) {
+    Serial.println(F("Fallo"));
+  } else {
+    Serial.println(F("Enviado!"));
+  }
+}
+
+void luzPs(int luz){
+  luz = luz * 20;
+  Serial.println(F("Enviando valor"));
+  Serial.print("...");
+  if (!luzPlus.publish(luz)) {
+    Serial.println(F("Fallo"));
+  } else {
+    Serial.println(F("Enviado!"));
+  }
+}
+
+void temperaturaPs(int tempu){
+  Serial.println(F("Enviando valor"));
+  Serial.print("...");
+  if (!temperaturaPlus.publish(tempu)) {
     Serial.println(F("Fallo"));
   } else {
     Serial.println(F("Enviado!"));
